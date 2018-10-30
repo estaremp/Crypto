@@ -9,7 +9,7 @@ MODE_DECIPHER = 1
 # --- IMPLEMENTATION GOES HERE ---------------------------------------------
 #  Student helpers (functions, constants, etc.) can be defined here, if needed
 
-
+from functools import reduce
 
 # --------------------------------------------------------------------------
 
@@ -27,8 +27,18 @@ def uoc_lfsr_sequence(polynomial, initial_state, output_bits):
 
     # --- IMPLEMENTATION GOES HERE ---
 
+    initial_state.reverse()
+    polynomial.reverse()
+    state = initial_state
+    seq = []
+    i = 0
 
+    while (i<output_bits):
+        state.insert(0,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state,polynomial)]))
+        seq.append(state.pop())
+        i += 1
 
+    result = seq
     # --------------------------------
 
     return result
@@ -52,7 +62,7 @@ def uoc_ext_a5_pseudo_random_gen(params_pol_0, params_pol_1, params_pol_2, clock
 
     # --- IMPLEMENTATION GOES HERE ---
 
-
+    
 
     # --------------------------------
 
