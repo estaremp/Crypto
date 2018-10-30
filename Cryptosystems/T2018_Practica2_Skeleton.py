@@ -27,15 +27,14 @@ def uoc_lfsr_sequence(polynomial, initial_state, output_bits):
 
     # --- IMPLEMENTATION GOES HERE ---
 
-    initial_state.reverse()
-    polynomial.reverse()
+    gates = len(initial_state)
     state = initial_state
     seq = []
     i = 0
 
     while (i<output_bits):
-        state.insert(0,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state,polynomial)]))
-        seq.append(state.pop())
+        state.insert(gates,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state,polynomial)]))
+        seq.append(state.pop(0))
         i += 1
 
     result = seq
@@ -62,8 +61,43 @@ def uoc_ext_a5_pseudo_random_gen(params_pol_0, params_pol_1, params_pol_2, clock
 
     # --- IMPLEMENTATION GOES HERE ---
 
+    state_1 = params_pol_0[1]
+    state_2 = params_pol_1[1]
+    state_3 = params_pol_2[1]
     
+    gates_1 = len(state_1)
+    gates_2 = len(state_2)
+    gates_3 = len(state_3)
+    
+    conn_1 = params_pol_0[0]
+    conn_2 = params_pol_1[0]
+    conn_3 = params_pol_2[0]
+    
+    if (clocking_bits[0]>=gates_1) or (clocking_bits[1]>=gates_2) or (clocking_bits[2]>=gates_3):
+        print("ERROR: Clocking bits are not valid for this set up.")
+    
+    i = 0
+    while (i<output_bits):
+        
+        z = state_1[0]^state_2[0]^state_3[0]
+        sequence.append(z)
+        
+        #check state of clocking bits
+        clck = [state_1[-clocking_bits[0]-1],state_2[-clocking_bits[1]-1],state_3[-clocking_bits[2]-1]]
+        vote = max(set(clck), key = clck.count)
 
+        if clck[0]==vote:
+            state_1.insert(gates_1,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state_1,conn_1)]))
+            state_1.pop(0)
+        if clck[1]==vote:
+            state_2.insert(gates_2,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state_2,conn_2)]))
+            state_2.pop(0)
+        if clck[2]==vote:
+            state_3.insert(gates_3,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state_3,conn_3)]))
+            state_3.pop(0)
+        
+        i += 1
+                
     # --------------------------------
 
     return sequence
