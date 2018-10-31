@@ -10,6 +10,7 @@ MODE_DECIPHER = 1
 #  Student helpers (functions, constants, etc.) can be defined here, if needed
 
 from functools import reduce
+import binascii
 
 # --------------------------------------------------------------------------
 
@@ -118,8 +119,44 @@ def uoc_a5_cipher(initial_state_0, initial_state_1, initial_state_2, message, mo
     output = ""
 
     # --- IMPLEMENTATION GOES HERE ---
+    
+    conn_LFSR1 = [0]*19
+    conn_LFSR2 = [0]*22
+    conn_LFSR3 = [0]*23
+    
+    conn_LFSR1[-19]=1
+    conn_LFSR1[-18]=1
+    conn_LFSR1[-17]=1
+    conn_LFSR1[-14]=1
 
+    conn_LFSR2[-22]=1
+    conn_LFSR2[-21]=1
+    
+    conn_LFSR3[-23]=1
+    conn_LFSR3[-22]=1
+    conn_LFSR3[-21]=1
+    conn_LFSR3[-8]=1
+    
+    params_LFSR1 = [conn_LFSR1,initial_state_0]
+    params_LFSR2 = [conn_LFSR2,initial_state_1]
+    params_LFSR3 = [conn_LFSR3,initial_state_2]
+    
+    clck_A = [8,10,10]
+    
+    #encode
+    if mode==0:
+        #message to bin
+        msg_bin = [int(m) for m in bin(int.from_bytes(message.encode(),'big'))[2:]]
+        msg_bin.insert(0,0)
+        
+        generated_seq = uoc_ext_a5_pseudo_random_gen(params_LFSR1, params_LFSR2, params_LFSR3, clck_A, len(msg_bin))
+        output = ''.join(str(m) for m in [aa^bb for aa,bb in zip(generated_seq,msg_bin)])
 
+    #decode
+    if mode==1:
+        generated_seq = uoc_ext_a5_pseudo_random_gen(params_LFSR1, params_LFSR2, params_LFSR3, clck_A, len(message))
+        decoded_msg = int(''.join(str(m) for m in [aa^bb for aa,bb in zip(generated_seq,[int(s) for s in message])]),2)
+        output = decoded_msg.to_bytes((decoded_msg.bit_length() + 7) // 8, 'big').decode()
 
     # --------------------------------
 
