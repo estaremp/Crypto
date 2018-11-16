@@ -11,6 +11,7 @@ MODE_DECIPHER = 1
 
 from functools import reduce
 import binascii
+from random import *
 
 # --------------------------------------------------------------------------
 
@@ -223,6 +224,7 @@ def uoc_g(message):
 
     # --- IMPLEMENTATION GOES HERE ---
 
+    #concatenate two copies of the message
     output = (message + message)
     
     # --------------------------------
@@ -253,7 +255,6 @@ def uoc_naive_padding(message, block_len):
     
     #concatenate message bits with padding list o 0's
     output = ''.join(str(c) for c in format(int.from_bytes(message.encode(),'big'),'0'+str(size_msg)+'b')) + padding
-
     # --------------------------------
 
     return output
@@ -270,9 +271,32 @@ def uoc_mmo_hash(message):
     h_i = ""
 
     # --- IMPLEMENTATION GOES HERE ---
+    
+    #block size of our hash
+    block_size = 128
+    
+    #define IV
+    h_i = [1 for i in range(block_size)]
 
+    #add message padding if not multiple of 128
+    padded_msg = [int(m) for m in uoc_naive_padding(message, block_size)]
+    
+    #divide message into blocks
+    num_blocks = int(len(padded_msg)/block_size)
+    
+    block = []
+    for i in range(num_blocks):
+        block.append(padded_msg[i*block_size:i*block_size+block_size])
+    
+    #main loop
+    for i in range(num_blocks):
+        #generate key
+        key = uoc_g(''.join(str(h) for h in h_i))
+        #xor aes output with previous hash
+        h_i = [aa^bb for aa,bb in zip(h_i,[int(a) for a in uoc_aes(''.join(str(b) for b in block[i]),key)])]
 
-
+    #parse hash to string
+    h_i = ''.join(str(h) for h in h_i)
 
     # --------------------------------
 
@@ -291,8 +315,22 @@ def uoc_collision(prefix):
 
     # --- IMPLEMENTATION GOES HERE ---
 
+    size_msg = len(prefix)*8
+    block_len = 128
+    
+    #check how much left there is for the message to fill the last block
+    whats_left = int((block_len - size_msg % block_len)/8)
+    
+    #generate two different random numbers within that range
+    null_a = randint(2,whats_left)
+    null_b = randint(1,null_a-1)
+    
+    #add some Null characters
+    msg_a = prefix + ''.join('\0' for i in range(null_a))
+    msg_b = prefix + ''.join('\0' for i in range(null_b))
 
-
+    collision = (msg_a,msg_b)
+    
     # --------------------------------
 
     return collision
