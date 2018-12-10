@@ -34,7 +34,7 @@ def uoc_lfsr_sequence(polynomial, initial_state, output_bits):
     state = initial_state
     seq = []
     i = 0
-
+    
     #append last bit to output sequence and find xor from polynomial of the LSFR state for the input bit
     while (i<output_bits):
         state.insert(gates,reduce(lambda a,b: a^b,[aa*bb for aa,bb in zip(state,polynomial)]))
